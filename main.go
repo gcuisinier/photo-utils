@@ -20,7 +20,7 @@ func main() {
 
 	var fileToProcess []string
 
-	rawExtenstion := []string{".RAW", ".NEF", ".ARW"}
+	rawExtenstion := []string{".RAW", ".NEF", ".ARW", ".CR2"}
 	sort.Strings(rawExtenstion)
 
 	dir, err := os.Getwd()
