@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,11 @@ import (
 
 func main() {
 
-	configureLog()
+	dryRun := flag.Bool("dryRun", true, "Execute a dryRun, do not remove file")
+	flag.Parse()
+
+	logFile := configureLog()
+	defer logFile.Close()
 
 	var fileToProcess []string
 
@@ -48,22 +53,28 @@ func main() {
 		log.Println(err)
 	}
 
-	processFile(fileToProcess)
+	processFile(fileToProcess, *dryRun)
 
 }
 
-func configureLog() {
-	f, err := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func configureLog() *os.File {
+	file, err := os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+		log.Fatal(err)
 	}
-	defer f.Close()
 
-	//log.SetOutput(f)
+	log.SetOutput(file)
+	return file
 
 }
 
-func processFile(files []string) {
+func processFile(files []string, dryRun bool) {
+
+	if dryRun {
+		fmt.Println("*****************************")
+		fmt.Println("   DRY   RUN  - NOT REMOVING")
+		fmt.Println("*****************************")
+	}
 
 	var totalSize int64 = 0
 
@@ -75,12 +86,36 @@ func processFile(files []string) {
 		}
 
 		log.Println("Remove " + file + " " + ByteCountDecimal(fi.Size()))
-
 		totalSize += fi.Size()
+		if !dryRun {
+			//var err = os.Remove(file)
+			if isError(err) {
+				return
+			}
+		}
+
 	}
 
-	fmt.Println("Total size gained :" + ByteCountDecimal(totalSize))
+	fmt.Println("+--------------------------------------------------+")
+	fmt.Println("+ Total size gained : \t\t" + ByteCountDecimal(totalSize))
+	fmt.Println("+ Number of file deleted : \t", (len(files)))
+	fmt.Println("+                                                  +")
+	fmt.Println("+--------------------------------------------------+")
 
+	if dryRun {
+		fmt.Println("*****************************")
+		fmt.Println("   DRY   RUN  - NOT REMOVING")
+		fmt.Println("*****************************")
+	}
+
+}
+
+func isError(err error) bool {
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return (err != nil)
 }
 
 func ByteCountDecimal(b int64) string {
