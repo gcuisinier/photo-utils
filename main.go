@@ -88,7 +88,7 @@ func processFile(files []string, dryRun bool) {
 		log.Println("Remove " + file + " " + ByteCountDecimal(fi.Size()))
 		totalSize += fi.Size()
 		if !dryRun {
-			//var err = os.Remove(file)
+			var err = os.Remove(file)
 			if isError(err) {
 				return
 			}
